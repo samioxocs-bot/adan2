@@ -491,7 +491,7 @@ export default function Adan2AppPage() {
             muezzinId={muezzinId}
             lang={lang}
             onSelectMuezzin={handleSelectMuezzin}
-            lastSyncedAt={data?.lastSyncedAt || new Date().toISOString()}
+            lastSyncedAt={data?.lastSyncedAt || '2026-10-14T14:00:00.000Z'}
           />
         )}
       </main>

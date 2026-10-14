@@ -14,6 +14,8 @@ import {
 import {
   FIQH_TOPICS,
   MUEZZIN_PROFILES,
+  formatTime12Ar,
+  formatTime12En,
   type ComputedPrayerDay,
 } from '@/lib/prayer-engine'
 import {
@@ -337,8 +339,8 @@ export function QiblaCalendarFiqh({
           <div className="flex items-center justify-between gap-2">
             <span className="text-[10px] text-muted-foreground">
               {isAr
-                ? `آخر مزامنة بين الأجهزة: ${new Date(lastSyncedAt).toLocaleTimeString('ar-SA')}`
-                : `Last synced: ${new Date(lastSyncedAt).toLocaleTimeString()}`}
+                ? `آخر مزامنة بين الأجهزة: ${formatTime12Ar(new Date(lastSyncedAt))}`
+                : `Last synced: ${formatTime12En(new Date(lastSyncedAt))}`}
             </span>
             <button
               type="button"

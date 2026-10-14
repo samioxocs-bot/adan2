@@ -652,36 +652,55 @@ const PRAYER_META: Record<
   },
 }
 
-export function formatTime12Ar(date: Date, timeZone = 'Asia/Riyadh'): string {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone,
-  }).formatToParts(date)
-  const hour = parts.find((p) => p.type === 'hour')?.value || '12'
-  const minute = parts.find((p) => p.type === 'minute')?.value || '00'
-  const dayPeriod = parts.find((p) => p.type === 'dayPeriod')?.value || 'AM'
-  const suffix = dayPeriod.toUpperCase().includes('P') ? 'م' : 'ص'
-  return `${hour}:${minute} ${suffix}`
+const TIMEZONE_UTC_OFFSET_MINUTES: Record<string, number> = {
+  'Africa/Casablanca': 60,
+  'Africa/Algiers': 60,
+  'Africa/Tunis': 60,
+  'Africa/Tripoli': 120,
+  'Africa/Nouakchott': 0,
+  'Asia/Riyadh': 180,
+  'Asia/Dubai': 240,
+  'Asia/Qatar': 180,
+  'Asia/Kuwait': 180,
+  'Africa/Cairo': 180,
+  'Asia/Jerusalem': 180,
+  'Asia/Damascus': 180,
+  'Asia/Baghdad': 180,
+  'Europe/Istanbul': 180,
+  'Asia/Kuala_Lumpur': 480,
+  'Asia/Jakarta': 420,
+  'Europe/London': 60,
+  UTC: 0,
 }
 
-export function formatTime12En(date: Date, timeZone = 'Asia/Riyadh'): string {
-  return new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone,
-  }).format(date)
+function getShiftedUtcDate(date: Date, timeZone = 'Africa/Casablanca'): Date {
+  const offsetMinutes = TIMEZONE_UTC_OFFSET_MINUTES[timeZone] ?? 60
+  return new Date(date.getTime() + offsetMinutes * 60_000)
 }
 
-export function formatTime24(date: Date, timeZone = 'Asia/Riyadh'): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone,
-  }).format(date)
+export function formatTime12Ar(date: Date, timeZone = 'Africa/Casablanca'): string {
+  const shifted = getShiftedUtcDate(date, timeZone)
+  const h24 = shifted.getUTCHours()
+  const m = shifted.getUTCMinutes()
+  const h12 = h24 % 12 || 12
+  const suffix = h24 >= 12 ? 'م' : 'ص'
+  return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
+export function formatTime12En(date: Date, timeZone = 'Africa/Casablanca'): string {
+  const shifted = getShiftedUtcDate(date, timeZone)
+  const h24 = shifted.getUTCHours()
+  const m = shifted.getUTCMinutes()
+  const h12 = h24 % 12 || 12
+  const suffix = h24 >= 12 ? 'PM' : 'AM'
+  return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
+export function formatTime24(date: Date, timeZone = 'Africa/Casablanca'): string {
+  const shifted = getShiftedUtcDate(date, timeZone)
+  const h24 = shifted.getUTCHours()
+  const m = shifted.getUTCMinutes()
+  return `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
 export function calculateDistanceToKaabaKm(lat: number, lng: number): number {
@@ -710,7 +729,16 @@ export function computePrayerSchedule(
 ): ComputedPrayerDay {
   const coords = new Coordinates(lat, lng)
   const params = getCalculationParams(method, madhab)
-  const prayerTimes = new PrayerTimes(coords, now, params)
+  const shiftedNow = getShiftedUtcDate(now, timeZone)
+  const solarDate = new Date(
+    shiftedNow.getUTCFullYear(),
+    shiftedNow.getUTCMonth(),
+    shiftedNow.getUTCDate(),
+    12,
+    0,
+    0
+  )
+  const prayerTimes = new PrayerTimes(coords, solarDate, params)
   const sunnahTimes = new SunnahTimes(prayerTimes)
   const qiblaAngle = Math.round(Qibla(coords) * 10) / 10
 
@@ -733,8 +761,15 @@ export function computePrayerSchedule(
   let isTomorrowFajr = false
 
   if (!nextPrayerEntry) {
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
-    const tomorrowPrayers = new PrayerTimes(coords, tomorrow, params)
+    const tomorrowSolar = new Date(
+      shiftedNow.getUTCFullYear(),
+      shiftedNow.getUTCMonth(),
+      shiftedNow.getUTCDate() + 1,
+      12,
+      0,
+      0
+    )
+    const tomorrowPrayers = new PrayerTimes(coords, tomorrowSolar, params)
     nextPrayerEntry = { id: 'fajr', time: tomorrowPrayers.fajr }
     isTomorrowFajr = true
   }
@@ -792,24 +827,24 @@ export function computePrayerSchedule(
         day: 'numeric',
         month: 'long',
         year: 'numeric',
-        timeZone,
+        timeZone: 'UTC',
       }
-    ).format(now)
+    ).format(shiftedNow)
     hijriDateEn = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
-      timeZone,
-    }).format(now)
+      timeZone: 'UTC',
+    }).format(shiftedNow)
     hijriMonthAr = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
       month: 'long',
-      timeZone,
-    }).format(now)
+      timeZone: 'UTC',
+    }).format(shiftedNow)
     const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric',
       year: 'numeric',
-      timeZone,
-    }).formatToParts(now)
+      timeZone: 'UTC',
+    }).formatToParts(shiftedNow)
     const dPart = parts.find((p) => p.type === 'day')
     const yPart = parts.find((p) => p.type === 'year')
     if (dPart) hijriDay = parseInt(dPart.value, 10) || 1
@@ -825,21 +860,21 @@ export function computePrayerSchedule(
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    timeZone,
-  }).format(now)
+    timeZone: 'UTC',
+  }).format(shiftedNow)
 
   const gregorianEn = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    timeZone,
-  }).format(now)
+    timeZone: 'UTC',
+  }).format(shiftedNow)
 
   const nextMeta = PRAYER_META[nextPrayerEntry.id]
 
   return {
-    dateIso: now.toISOString().split('T')[0],
+    dateIso: shiftedNow.toISOString().split('T')[0],
     hijriDateAr,
     hijriDateEn,
     hijriMonthAr,
@@ -1259,7 +1294,7 @@ export const FIQH_TOPICS: FiqhTopic[] = [
     titleAr: 'أحكام سجود السهو القبلي والبعدي',
     titleEn: 'Rulings of Sujood As-Sahw (Pre & Post Salam)',
     summaryAr:
-      'كيفية جبر الخلل الواقع في الصلاة بسبب الزيادة أو النقص أو الشك على المذهب المالكي ومذاهب الجمهور.',
+      'كيفية جبر الخلل ال��اقع في الصلاة بسبب الزيادة أو النقص أو الشك على المذهب المالكي ومذاهب الجمهور.',
     summaryEn:
       'How to remedy unintended additions, omissions, or doubts during prayer.',
     detailsAr: [
