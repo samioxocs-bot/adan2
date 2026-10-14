@@ -8,7 +8,7 @@ import type {
 } from '@/lib/store-types'
 import type { PrayerId } from '@/lib/prayer-engine'
 
-const DB_PATH = '/tmp/adan2-spiritual-db.json'
+const DB_PATH = '/tmp/adan2-spiritual-db-v2.json'
 
 function createInitialLogs(): PrayerLogEntry[] {
   const logs: PrayerLogEntry[] = []
@@ -60,10 +60,10 @@ function createInitialLogs(): PrayerLogEntry[] {
 function getDefaultDatabase(): UserDatabaseState {
   return {
     preferences: {
-      cityId: 'makkah',
-      calcMethod: 'umm_al_qura',
+      cityId: 'rabat',
+      calcMethod: 'morocco_habous',
       madhab: 'shafi',
-      muezzinId: 'makkah_haram',
+      muezzinId: 'morocco_rabat_habous',
       language: 'ar',
       ramadanMode: true,
       workScheduleStart: '09:00',

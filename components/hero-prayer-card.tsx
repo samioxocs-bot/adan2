@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   MapPin,
   LocateFixed,
@@ -11,6 +11,7 @@ import {
   VolumeX,
   Compass,
   Calendar,
+  Settings,
 } from 'lucide-react'
 import {
   CITY_PRESETS,
@@ -20,7 +21,12 @@ import {
   type CalcMethodId,
   type PrayerId,
 } from '@/lib/prayer-engine'
-import { playHarmonicAdhanPreview, stopAdhanAudio, triggerVibration } from '@/lib/audio-adhan'
+import {
+  playAdhanByMuezzinId,
+  stopAdhanAudio,
+  subscribeAdhanState,
+  triggerVibration,
+} from '@/lib/audio-adhan'
 
 interface HeroPrayerCardProps {
   schedule: ComputedPrayerDay
@@ -33,6 +39,7 @@ interface HeroPrayerCardProps {
   onUseGps: () => void
   onChangeMethod: (method: CalcMethodId) => void
   onLogPrayer: (prayerId: PrayerId, status: 'on_time' | 'jamaah', khushu: number) => void
+  onOpenSettings?: () => void
   gpsLoading?: boolean
 }
 
@@ -47,26 +54,30 @@ export function HeroPrayerCard({
   onUseGps,
   onChangeMethod,
   onLogPrayer,
+  onOpenSettings,
   gpsLoading,
 }: HeroPrayerCardProps) {
   const isAr = lang === 'ar'
   const [isPlayingAdhan, setIsPlayingAdhan] = useState(false)
+  const [currentPhrase, setCurrentPhrase] = useState('')
   const [loggedBanner, setLoggedBanner] = useState<string | null>(null)
 
-  const currentCity = CITY_PRESETS.find((c) => c.id === cityId) || CITY_PRESETS[0]
+  useEffect(() => {
+    return subscribeAdhanState((st) => {
+      setIsPlayingAdhan(st.isPlaying)
+      setCurrentPhrase(st.currentPhraseAr)
+    })
+  }, [])
+
   const currentMuezzin =
     MUEZZIN_PROFILES.find((m) => m.id === muezzinId) || MUEZZIN_PROFILES[0]
 
   const handleToggleAdhan = () => {
     if (isPlayingAdhan) {
       stopAdhanAudio()
-      setIsPlayingAdhan(false)
     } else {
-      setIsPlayingAdhan(true)
       triggerVibration([200, 100, 250])
-      playHarmonicAdhanPreview(currentMuezzin.baseFreq, () => {
-        setIsPlayingAdhan(false)
-      })
+      playAdhanByMuezzinId(currentMuezzin.id)
     }
   }
 
@@ -182,9 +193,14 @@ export function HeroPrayerCard({
               </div>
               <p className="mt-1 text-[11px] text-emerald-200/85">
                 {isAr
-                  ? `المؤذن: ${currentMuezzin.nameAr} (${currentMuezzin.maqamAr})`
-                  : `Muezzin: ${currentMuezzin.nameEn}`}
+                  ? `المؤذن: ${currentMuezzin.nameAr} (${currentMuezzin.countryAr})`
+                  : `Muezzin: ${currentMuezzin.nameEn} (${currentMuezzin.countryEn})`}
               </p>
+              {isPlayingAdhan && currentPhrase && (
+                <p className="mt-1 rounded-lg bg-amber-500/20 px-2.5 py-0.5 font-serif text-xs font-bold text-amber-200 ring-1 ring-amber-400/40">
+                  ﴿ {currentPhrase} ﴾
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col items-center gap-1.5">
@@ -216,6 +232,17 @@ export function HeroPrayerCard({
                     </>
                   )}
                 </button>
+
+                {onOpenSettings && (
+                  <button
+                    type="button"
+                    onClick={onOpenSettings}
+                    className="inline-flex items-center gap-1 rounded-lg bg-emerald-900/80 px-2.5 py-1 text-xs font-semibold text-emerald-100 ring-1 ring-emerald-500/40 transition hover:bg-emerald-800"
+                  >
+                    <Settings className="h-3.5 w-3.5 text-amber-300" />
+                    <span>{isAr ? 'أصوات المؤذنين' : 'Voices'}</span>
+                  </button>
+                )}
 
                 <button
                   type="button"

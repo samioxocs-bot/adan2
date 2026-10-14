@@ -10,6 +10,7 @@ import {
   BrainCircuit,
   Compass,
   Sparkles,
+  Settings,
 } from 'lucide-react'
 import {
   CITY_PRESETS,
@@ -28,6 +29,7 @@ import { HeroPrayerCard } from '@/components/hero-prayer-card'
 import { PrayerTimesList } from '@/components/prayer-times-list'
 import { AiSpiritualCoach } from '@/components/ai-spiritual-coach'
 import { QiblaCalendarFiqh } from '@/components/qibla-calendar-fiqh'
+import { SettingsPanel } from '@/components/settings-panel'
 
 type ApiUserResponse = UserDatabaseState & {
   predictiveInsights: PredictiveInsight[]
@@ -39,17 +41,20 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 export default function Adan2AppPage() {
   const { data, mutate } = useSWR<ApiUserResponse>('/api/user-data', fetcher)
 
-  const [activeTab, setActiveTab] = useState<'prayers' | 'ai' | 'qibla'>('prayers')
+  const [activeTab, setActiveTab] = useState<
+    'prayers' | 'ai' | 'qibla' | 'settings'
+  >('prayers')
   const [isDark, setIsDark] = useState(true)
   const [lang, setLang] = useState<'ar' | 'en'>('ar')
-  const [cityId, setCityId] = useState('makkah')
+  const [cityId, setCityId] = useState('rabat')
   const [customCoords, setCustomCoords] = useState<{
     lat: number
     lng: number
     label: string
   } | null>(null)
-  const [calcMethod, setCalcMethod] = useState<CalcMethodId>('umm_al_qura')
-  const [muezzinId, setMuezzinId] = useState('makkah_haram')
+  const [calcMethod, setCalcMethod] = useState<CalcMethodId>('morocco_habous')
+  const [madhab, setMadhab] = useState<'shafi' | 'hanafi'>('shafi')
+  const [muezzinId, setMuezzinId] = useState('morocco_rabat_habous')
   const [gpsLoading, setGpsLoading] = useState(false)
   const [now, setNow] = useState<Date | null>(null)
   const [toastAlert, setToastAlert] = useState<string | null>(null)
@@ -66,9 +71,10 @@ export default function Adan2AppPage() {
   // Sync initial preferences when server data arrives
   useEffect(() => {
     if (data?.preferences) {
-      setCityId(data.preferences.cityId || 'makkah')
-      setCalcMethod(data.preferences.calcMethod || 'umm_al_qura')
-      setMuezzinId(data.preferences.muezzinId || 'makkah_haram')
+      setCityId(data.preferences.cityId || 'rabat')
+      setCalcMethod(data.preferences.calcMethod || 'morocco_habous')
+      setMadhab(data.preferences.madhab || 'shafi')
+      setMuezzinId(data.preferences.muezzinId || 'morocco_rabat_habous')
       setLang(data.preferences.language || 'ar')
     }
   }, [data?.preferences])
@@ -98,7 +104,7 @@ export default function Adan2AppPage() {
     activeLat,
     activeLng,
     calcMethod,
-    data?.preferences?.madhab || 'shafi',
+    madhab,
     now || new Date('2026-10-14T14:00:00Z'),
     selectedPreset.timeZone
   )
@@ -144,8 +150,8 @@ export default function Adan2AppPage() {
         setGpsLoading(false)
         setToastAlert(
           isAr
-            ? 'تعذر الوصول لخدمة الموقع، تم اعتماد مكة المكرمة افتراضياً'
-            : 'GPS permission unavailable; using Makkah coordinates.'
+            ? 'تعذر الوصول لخدمة الموقع، تم اعتماد الرباط (وزارة الأوقاف المغربية) افتراضياً'
+            : 'GPS permission unavailable; using Rabat coordinates.'
         )
         setTimeout(() => setToastAlert(null), 3500)
       },
@@ -161,6 +167,19 @@ export default function Adan2AppPage() {
       body: JSON.stringify({
         action: 'update_preferences',
         preferences: { calcMethod: newMethod },
+      }),
+    })
+    mutate()
+  }
+
+  const handleChangeMadhab = async (newMadhab: 'shafi' | 'hanafi') => {
+    setMadhab(newMadhab)
+    await fetch('/api/user-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update_preferences',
+        preferences: { madhab: newMadhab },
       }),
     })
     mutate()
@@ -271,8 +290,8 @@ export default function Adan2AppPage() {
         onTestAlert={(mins) => {
           setToastAlert(
             isAr
-              ? `🔔 تنبيه صوتي تجريبي: متبقٍ ${mins} دقائق على أذان ${schedule.nextPrayer.nameAr} — ﴿ حَافِظُوا عَلَى الصَّلَوَاتِ ﴾`
-              : `🔔 Audio Alert Preview: ${mins} minutes until ${schedule.nextPrayer.nameEn} Adhan`
+              ? `تنبيه صوتي تجريبي: متبقٍ ${mins} دقائق على أذان ${schedule.nextPrayer.nameAr} — ﴿ حَافِظُوا عَلَى الصَّلَوَاتِ ﴾`
+              : `Audio Alert Preview: ${mins} minutes until ${schedule.nextPrayer.nameEn} Adhan`
           )
           setTimeout(() => setToastAlert(null), 4500)
         }}
@@ -291,13 +310,26 @@ export default function Adan2AppPage() {
               </h1>
               <p className="mt-0.5 text-[10px] text-muted-foreground">
                 {isAr
-                  ? 'حساب فلكي دقيق • ذكاء اصطناعي للخشوع'
-                  : 'Astronomical Precision & AI Spiritual Coach'}
+                  ? 'مواقيت وزارة الأوقاف المغربية • أصوات مغاربية وعالمية'
+                  : 'Morocco Habous API • Maghrebi & World Adhan Voices'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('settings')}
+              className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition ${
+                activeTab === 'settings'
+                  ? 'border-amber-400/50 bg-emerald-700 text-white'
+                  : 'border-border bg-card text-foreground hover:bg-secondary'
+              }`}
+            >
+              <Settings className="h-3.5 w-3.5 text-amber-400" />
+              <span>{isAr ? 'الإعدادات والأصوات' : 'Settings'}</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
@@ -312,7 +344,9 @@ export default function Adan2AppPage() {
               type="button"
               onClick={() => setIsDark(!isDark)}
               className="inline-flex items-center justify-center rounded-xl border border-border bg-card p-1.5 text-foreground transition hover:bg-secondary"
-              aria-label={isAr ? 'تبديل الوضع الليلي والنهاري' : 'Toggle theme'}
+              aria-label={
+                isAr ? 'تبديل الوضع الليلي والنهاري' : 'Toggle theme'
+              }
             >
               {isDark ? (
                 <Sun className="h-4 w-4 text-amber-400" />
@@ -347,18 +381,19 @@ export default function Adan2AppPage() {
           onUseGps={handleUseGps}
           onChangeMethod={handleChangeMethod}
           onLogPrayer={handleLogPrayer}
+          onOpenSettings={() => setActiveTab('settings')}
           gpsLoading={gpsLoading}
         />
 
-        {/* Segmented Navigation Tabs (Mobile-first & Desktop) */}
+        {/* Segmented Navigation Tabs (4 Tabs including Settings & Voices) */}
         <nav
           aria-label={isAr ? 'أقسام التطبيق' : 'App sections'}
-          className="grid grid-cols-3 gap-1 rounded-2xl border border-border bg-card/90 p-1 shadow-sm"
+          className="grid grid-cols-4 gap-1 rounded-2xl border border-border bg-card/90 p-1 shadow-sm"
         >
           <button
             type="button"
             onClick={() => setActiveTab('prayers')}
-            className={`flex items-center justify-center gap-1 rounded-xl py-2 px-1.5 text-[11px] sm:text-xs font-bold transition ${
+            className={`flex items-center justify-center gap-1 rounded-xl py-2 px-1 text-[11px] sm:text-xs font-bold transition ${
               activeTab === 'prayers'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -370,8 +405,21 @@ export default function Adan2AppPage() {
 
           <button
             type="button"
+            onClick={() => setActiveTab('settings')}
+            className={`flex items-center justify-center gap-1 rounded-xl py-2 px-1 text-[11px] sm:text-xs font-bold transition ${
+              activeTab === 'settings'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Settings className="h-3.5 w-3.5 shrink-0" />
+            <span>{isAr ? 'الإعدادات والأصوات' : 'Voices & API'}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('ai')}
-            className={`flex items-center justify-center gap-1 rounded-xl py-2 px-1.5 text-[11px] sm:text-xs font-bold transition ${
+            className={`flex items-center justify-center gap-1 rounded-xl py-2 px-1 text-[11px] sm:text-xs font-bold transition ${
               activeTab === 'ai'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -384,7 +432,7 @@ export default function Adan2AppPage() {
           <button
             type="button"
             onClick={() => setActiveTab('qibla')}
-            className={`flex items-center justify-center gap-1 rounded-xl py-2 px-1.5 text-[11px] sm:text-xs font-bold transition ${
+            className={`flex items-center justify-center gap-1 rounded-xl py-2 px-1 text-[11px] sm:text-xs font-bold transition ${
               activeTab === 'qibla'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -400,10 +448,30 @@ export default function Adan2AppPage() {
           <PrayerTimesList
             schedule={schedule}
             logs={data?.logs || []}
-            notifications={data?.preferences?.notifications || defaultNotifications}
+            notifications={
+              data?.preferences?.notifications || defaultNotifications
+            }
             insights={data?.predictiveInsights || []}
             lang={lang}
             onLogPrayer={handleLogPrayer}
+            onToggleNotification={handleToggleNotification}
+          />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsPanel
+            cityId={cityId}
+            calcMethod={calcMethod}
+            madhab={madhab}
+            muezzinId={muezzinId}
+            lang={lang}
+            notifications={
+              data?.preferences?.notifications || defaultNotifications
+            }
+            onSelectCity={handleSelectCity}
+            onChangeMethod={handleChangeMethod}
+            onChangeMadhab={handleChangeMadhab}
+            onSelectMuezzin={handleSelectMuezzin}
             onToggleNotification={handleToggleNotification}
           />
         )}

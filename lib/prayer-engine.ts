@@ -5,11 +5,14 @@ import {
   SunnahTimes,
   Qibla,
   Madhab,
-   CalculationParameters,
+  CalculationParameters,
 } from 'adhan'
 
 export type PrayerId = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha'
 export type CalcMethodId =
+  | 'morocco_habous'
+  | 'algeria_awqaf'
+  | 'tunisia_awqaf'
   | 'umm_al_qura'
   | 'muslim_world_league'
   | 'egyptian'
@@ -18,6 +21,13 @@ export type CalcMethodId =
   | 'dubai'
   | 'kuwait'
   | 'qatar'
+  | 'turkey_diyanet'
+
+export type RegionGroup =
+  | 'maghreb'
+  | 'haramain_gulf'
+  | 'egypt_levant'
+  | 'islamic_world'
 
 export interface CityPreset {
   id: string
@@ -25,19 +35,203 @@ export interface CityPreset {
   nameEn: string
   countryAr: string
   countryEn: string
+  region: RegionGroup
   lat: number
   lng: number
   timeZone: string
   method: CalcMethodId
+  habousCityKey?: string
 }
 
 export const CITY_PRESETS: CityPreset[] = [
+  // المدن المغربية — وزارة الأوقاف والشؤون الإسلامية بالمغرب
+  {
+    id: 'rabat',
+    nameAr: 'الرباط',
+    nameEn: 'Rabat',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 34.0209,
+    lng: -6.8416,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'rabat',
+  },
+  {
+    id: 'casablanca',
+    nameAr: 'الدار البيضاء',
+    nameEn: 'Casablanca',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 33.5731,
+    lng: -7.5898,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'casablanca',
+  },
+  {
+    id: 'fes',
+    nameAr: 'فاس',
+    nameEn: 'Fes',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 34.0181,
+    lng: -5.0078,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'fes',
+  },
+  {
+    id: 'marrakech',
+    nameAr: 'مراكش',
+    nameEn: 'Marrakech',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 31.6295,
+    lng: -7.9811,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'marrakech',
+  },
+  {
+    id: 'tangier',
+    nameAr: 'طنجة',
+    nameEn: 'Tangier',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 35.7595,
+    lng: -5.834,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'tangier',
+  },
+  {
+    id: 'agadir',
+    nameAr: 'أكادير',
+    nameEn: 'Agadir',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 30.4278,
+    lng: -9.5981,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'agadir',
+  },
+  {
+    id: 'meknes',
+    nameAr: 'مكناس',
+    nameEn: 'Meknes',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 33.8935,
+    lng: -5.5473,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'meknes',
+  },
+  {
+    id: 'oujda',
+    nameAr: 'وجدة',
+    nameEn: 'Oujda',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 34.6814,
+    lng: -1.9086,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'oujda',
+  },
+  {
+    id: 'tetouan',
+    nameAr: 'تطوان',
+    nameEn: 'Tetouan',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 35.5785,
+    lng: -5.3684,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'tetouan',
+  },
+  {
+    id: 'laayoune',
+    nameAr: 'العيون',
+    nameEn: 'Laayoune',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    lat: 27.1536,
+    lng: -13.2033,
+    timeZone: 'Africa/Casablanca',
+    method: 'morocco_habous',
+    habousCityKey: 'laayoune',
+  },
+  // باقي دول المغرب العربي
+  {
+    id: 'algiers',
+    nameAr: 'الجزائر العاصمة',
+    nameEn: 'Algiers',
+    countryAr: 'الجزائر',
+    countryEn: 'Algeria',
+    region: 'maghreb',
+    lat: 36.7538,
+    lng: 3.0588,
+    timeZone: 'Africa/Algiers',
+    method: 'algeria_awqaf',
+  },
+  {
+    id: 'tunis',
+    nameAr: 'تونس العاصمة',
+    nameEn: 'Tunis',
+    countryAr: 'تونس',
+    countryEn: 'Tunisia',
+    region: 'maghreb',
+    lat: 36.8065,
+    lng: 10.1815,
+    timeZone: 'Africa/Tunis',
+    method: 'tunisia_awqaf',
+  },
+  {
+    id: 'tripoli',
+    nameAr: 'طرابلس',
+    nameEn: 'Tripoli',
+    countryAr: 'ليبيا',
+    countryEn: 'Libya',
+    region: 'maghreb',
+    lat: 32.8872,
+    lng: 13.1913,
+    timeZone: 'Africa/Tripoli',
+    method: 'egyptian',
+  },
+  {
+    id: 'nouakchott',
+    nameAr: 'نواكشوط',
+    nameEn: 'Nouakchott',
+    countryAr: 'موريتانيا',
+    countryEn: 'Mauritania',
+    region: 'maghreb',
+    lat: 18.0735,
+    lng: -15.9582,
+    timeZone: 'Africa/Nouakchott',
+    method: 'muslim_world_league',
+  },
+  // الحرمين الشريفين والخليج
   {
     id: 'makkah',
     nameAr: 'مكة المكرمة',
     nameEn: 'Makkah',
     countryAr: 'السعودية',
     countryEn: 'Saudi Arabia',
+    region: 'haramain_gulf',
     lat: 21.4225,
     lng: 39.8262,
     timeZone: 'Asia/Riyadh',
@@ -49,6 +243,7 @@ export const CITY_PRESETS: CityPreset[] = [
     nameEn: 'Madinah',
     countryAr: 'السعودية',
     countryEn: 'Saudi Arabia',
+    region: 'haramain_gulf',
     lat: 24.4672,
     lng: 39.6112,
     timeZone: 'Asia/Riyadh',
@@ -60,21 +255,11 @@ export const CITY_PRESETS: CityPreset[] = [
     nameEn: 'Riyadh',
     countryAr: 'السعودية',
     countryEn: 'Saudi Arabia',
+    region: 'haramain_gulf',
     lat: 24.7136,
     lng: 46.6753,
     timeZone: 'Asia/Riyadh',
     method: 'umm_al_qura',
-  },
-  {
-    id: 'cairo',
-    nameAr: 'القاهرة',
-    nameEn: 'Cairo',
-    countryAr: 'مصر',
-    countryEn: 'Egypt',
-    lat: 30.0444,
-    lng: 31.2357,
-    timeZone: 'Africa/Cairo',
-    method: 'egyptian',
   },
   {
     id: 'dubai',
@@ -82,21 +267,11 @@ export const CITY_PRESETS: CityPreset[] = [
     nameEn: 'Dubai',
     countryAr: 'الإمارات',
     countryEn: 'UAE',
+    region: 'haramain_gulf',
     lat: 25.2048,
     lng: 55.2708,
     timeZone: 'Asia/Dubai',
     method: 'dubai',
-  },
-  {
-    id: 'alquds',
-    nameAr: 'القدس الشريف',
-    nameEn: 'Al-Quds',
-    countryAr: 'فلسطين',
-    countryEn: 'Palestine',
-    lat: 31.7683,
-    lng: 35.2137,
-    timeZone: 'Asia/Jerusalem',
-    method: 'muslim_world_league',
   },
   {
     id: 'doha',
@@ -104,31 +279,108 @@ export const CITY_PRESETS: CityPreset[] = [
     nameEn: 'Doha',
     countryAr: 'قطر',
     countryEn: 'Qatar',
+    region: 'haramain_gulf',
     lat: 25.2854,
     lng: 51.531,
     timeZone: 'Asia/Qatar',
     method: 'qatar',
   },
   {
+    id: 'kuwait_city',
+    nameAr: 'مدينة الكويت',
+    nameEn: 'Kuwait City',
+    countryAr: 'الكويت',
+    countryEn: 'Kuwait',
+    region: 'haramain_gulf',
+    lat: 29.3759,
+    lng: 47.9774,
+    timeZone: 'Asia/Kuwait',
+    method: 'kuwait',
+  },
+  // مصر والشام والقدس والعراق
+  {
+    id: 'cairo',
+    nameAr: 'القاهرة',
+    nameEn: 'Cairo',
+    countryAr: 'مصر',
+    countryEn: 'Egypt',
+    region: 'egypt_levant',
+    lat: 30.0444,
+    lng: 31.2357,
+    timeZone: 'Africa/Cairo',
+    method: 'egyptian',
+  },
+  {
+    id: 'alquds',
+    nameAr: 'القدس الشريف',
+    nameEn: 'Al-Quds',
+    countryAr: 'فلسطين',
+    countryEn: 'Palestine',
+    region: 'egypt_levant',
+    lat: 31.7683,
+    lng: 35.2137,
+    timeZone: 'Asia/Jerusalem',
+    method: 'muslim_world_league',
+  },
+  {
+    id: 'damascus',
+    nameAr: 'دمشق',
+    nameEn: 'Damascus',
+    countryAr: 'سوريا',
+    countryEn: 'Syria',
+    region: 'egypt_levant',
+    lat: 33.5138,
+    lng: 36.2765,
+    timeZone: 'Asia/Damascus',
+    method: 'muslim_world_league',
+  },
+  {
+    id: 'baghdad',
+    nameAr: 'بغداد',
+    nameEn: 'Baghdad',
+    countryAr: 'العراق',
+    countryEn: 'Iraq',
+    region: 'egypt_levant',
+    lat: 33.3152,
+    lng: 44.3661,
+    timeZone: 'Asia/Baghdad',
+    method: 'muslim_world_league',
+  },
+  // تركيا وآسيا وأوروبا
+  {
     id: 'istanbul',
     nameAr: 'إسطنبول',
     nameEn: 'Istanbul',
     countryAr: 'تركيا',
     countryEn: 'Turkey',
+    region: 'islamic_world',
     lat: 41.0082,
     lng: 28.9784,
     timeZone: 'Europe/Istanbul',
+    method: 'turkey_diyanet',
+  },
+  {
+    id: 'kuala_lumpur',
+    nameAr: 'كوالالمبور',
+    nameEn: 'Kuala Lumpur',
+    countryAr: 'ماليزيا',
+    countryEn: 'Malaysia',
+    region: 'islamic_world',
+    lat: 3.139,
+    lng: 101.6869,
+    timeZone: 'Asia/Kuala_Lumpur',
     method: 'muslim_world_league',
   },
   {
-    id: 'casablanca',
-    nameAr: 'الدار البيضاء',
-    nameEn: 'Casablanca',
-    countryAr: 'المغرب',
-    countryEn: 'Morocco',
-    lat: 33.5731,
-    lng: -7.5898,
-    timeZone: 'Africa/Casablanca',
+    id: 'jakarta',
+    nameAr: 'جاكرتا',
+    nameEn: 'Jakarta',
+    countryAr: 'إندونيسيا',
+    countryEn: 'Indonesia',
+    region: 'islamic_world',
+    lat: -6.2088,
+    lng: 106.8456,
+    timeZone: 'Asia/Jakarta',
     method: 'muslim_world_league',
   },
   {
@@ -137,6 +389,7 @@ export const CITY_PRESETS: CityPreset[] = [
     nameEn: 'London',
     countryAr: 'المملكة المتحدة',
     countryEn: 'United Kingdom',
+    region: 'islamic_world',
     lat: 51.5074,
     lng: -0.1278,
     timeZone: 'Europe/London',
@@ -148,20 +401,106 @@ export const CALC_METHODS: {
   id: CalcMethodId
   nameAr: string
   nameEn: string
+  badgeAr?: string
 }[] = [
-  { id: 'umm_al_qura', nameAr: 'تقويم أم القرى (مكة المكرمة)', nameEn: 'Umm Al-Qura University, Makkah' },
-  { id: 'muslim_world_league', nameAr: 'رابطة العالم الإسلامي', nameEn: 'Muslim World League (MWL)' },
-  { id: 'egyptian', nameAr: 'الهيئة المصرية العامة للمساحة', nameEn: 'Egyptian General Authority' },
-  { id: 'dubai', nameAr: 'دائرة الشؤون الإسلامية بدبي', nameEn: 'Dubai Islamic Affairs' },
-  { id: 'qatar', nameAr: 'دار التقويم القطري', nameEn: 'Qatar Calendar House' },
-  { id: 'kuwait', nameAr: 'وزارة الأوقاف الكويتية', nameEn: 'Kuwait Ministry of Awqaf' },
-  { id: 'isna', nameAr: 'الجمعية الإسلامية لأمريكا الشمالية', nameEn: 'ISNA (North America)' },
-  { id: 'karachi', nameAr: 'جامعة العلوم الإسلامية بكراتشي', nameEn: 'University of Islamic Sciences, Karachi' },
+  {
+    id: 'morocco_habous',
+    nameAr: 'وزارة الأوقاف والشؤون الإسلامية بالمغرب (Habous API)',
+    nameEn: 'Moroccan Ministry of Habous & Islamic Affairs (Method 21)',
+    badgeAr: 'رسمي - المغرب',
+  },
+  {
+    id: 'algeria_awqaf',
+    nameAr: 'وزارة الشؤون الدينية والأوقاف بالجزائر',
+    nameEn: 'Algerian Ministry of Religious Affairs',
+    badgeAr: 'المغرب العربي',
+  },
+  {
+    id: 'tunisia_awqaf',
+    nameAr: 'وزارة الشؤون الدينية بالجمهورية التونسية',
+    nameEn: 'Tunisian Ministry of Religious Affairs',
+    badgeAr: 'المغرب العربي',
+  },
+  {
+    id: 'umm_al_qura',
+    nameAr: 'تقويم أم القرى (مكة المكرمة)',
+    nameEn: 'Umm Al-Qura University, Makkah',
+  },
+  {
+    id: 'muslim_world_league',
+    nameAr: 'رابطة العالم الإسلامي',
+    nameEn: 'Muslim World League (MWL)',
+  },
+  {
+    id: 'egyptian',
+    nameAr: 'الهيئة المصرية العامة للمساحة',
+    nameEn: 'Egyptian General Authority',
+  },
+  {
+    id: 'dubai',
+    nameAr: 'دائرة الشؤون الإسلامية بدبي',
+    nameEn: 'Dubai Islamic Affairs',
+  },
+  {
+    id: 'qatar',
+    nameAr: 'دار التقويم القطري',
+    nameEn: 'Qatar Calendar House',
+  },
+  {
+    id: 'kuwait',
+    nameAr: 'وزارة الأوقاف الكويتية',
+    nameEn: 'Kuwait Ministry of Awqaf',
+  },
+  {
+    id: 'turkey_diyanet',
+    nameAr: 'رئاسة الشؤون الدينية التركية (ديانت)',
+    nameEn: 'Diyanet İşleri Başkanlığı, Turkey',
+  },
+  {
+    id: 'isna',
+    nameAr: 'الجمعية الإسلامية لأمريكا الشمالية',
+    nameEn: 'ISNA (North America)',
+  },
+  {
+    id: 'karachi',
+    nameAr: 'جامعة العلوم الإسلامية بكراتشي',
+    nameEn: 'University of Islamic Sciences, Karachi',
+  },
 ]
 
-export function getCalculationParams(method: CalcMethodId, madhab: 'shafi' | 'hanafi' = 'shafi'): CalculationParameters {
+export function getCalculationParams(
+  method: CalcMethodId,
+  madhab: 'shafi' | 'hanafi' = 'shafi'
+): CalculationParameters {
   let params: CalculationParameters
   switch (method) {
+    case 'morocco_habous': {
+      // Official Moroccan Ministry of Habous parameters: Fajr 19°, Isha 17°, +5m Dhuhr precaution, +4m Maghrib precaution
+      params = CalculationMethod.Other()
+      params.fajrAngle = 19
+      params.ishaAngle = 17
+      params.adjustments.dhuhr = 5
+      params.adjustments.maghrib = 4
+      break
+    }
+    case 'algeria_awqaf': {
+      // Algerian Ministry: Fajr 18°, Isha 17°, +3m Maghrib
+      params = CalculationMethod.Other()
+      params.fajrAngle = 18
+      params.ishaAngle = 17
+      params.adjustments.maghrib = 3
+      break
+    }
+    case 'tunisia_awqaf': {
+      // Tunisian Ministry: Fajr 18°, Isha 18°
+      params = CalculationMethod.Other()
+      params.fajrAngle = 18
+      params.ishaAngle = 18
+      break
+    }
+    case 'turkey_diyanet':
+      params = CalculationMethod.Turkey()
+      break
     case 'umm_al_qura':
       params = CalculationMethod.UmmAlQura()
       break
@@ -267,7 +606,8 @@ const PRAYER_META: Record<
   fajr: {
     nameAr: 'الفجر',
     nameEn: 'Fajr',
-    verseAr: 'أَقِمِ الصَّلَاةَ لِدُلُوكِ الشَّمْسِ إِلَىٰ غَسَقِ اللَّيْلِ وَقُرْآنَ الْفَجْرِ ۖ إِنَّ قُرْآنَ الْفَجْرِ كَانَ مَشْهُودًا',
+    verseAr:
+      'أَقِمِ الصَّلَاةَ لِدُلُوكِ الشَّمْسِ إِلَىٰ غَسَقِ اللَّيْلِ وَقُرْآنَ الْفَجْرِ ۖ إِنَّ قُرْآنَ الْفَجْرِ كَانَ مَشْهُودًا',
     verseRefAr: 'سورة الإسراء - آية 78',
     verseEn: 'Indeed, the recitation of dawn is ever witnessed. (Al-Isra 17:78)',
     recommendedWindowMinutes: 20,
@@ -275,17 +615,21 @@ const PRAYER_META: Record<
   dhuhr: {
     nameAr: 'الظهر',
     nameEn: 'Dhuhr',
-    verseAr: 'حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ وَقُومُوا لِلَّهِ قَانِتِينَ',
+    verseAr:
+      'حَافِظُوا عَلَى الصَّلَوَاتِ وَالصَّلَاةِ الْوُسْطَىٰ وَقُومُوا لِلَّهِ قَانِتِينَ',
     verseRefAr: 'سورة البقرة - آية 238',
-    verseEn: 'Maintain with care the obligatory prayers and stand before Allah devoutly. (Al-Baqarah 2:238)',
+    verseEn:
+      'Maintain with care the obligatory prayers and stand before Allah devoutly. (Al-Baqarah 2:238)',
     recommendedWindowMinutes: 25,
   },
   asr: {
     nameAr: 'العصر',
     nameEn: 'Asr',
-    verseAr: 'وَالْعَصْرِ * إِنَّ الْإِنسَانَ لَفِي خُسْرٍ * إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ',
+    verseAr:
+      'وَالْعَصْرِ * إِنَّ الْإِنسَانَ لَفِي خُسْرٍ * إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ',
     verseRefAr: 'سورة العصر - آية 1-3',
-    verseEn: 'By time, indeed mankind is in loss, except those who believe and do righteous deeds. (Al-Asr 103:1-3)',
+    verseEn:
+      'By time, indeed mankind is in loss, except those who believe and do righteous deeds. (Al-Asr 103:1-3)',
     recommendedWindowMinutes: 20,
   },
   maghrib: {
@@ -293,7 +637,8 @@ const PRAYER_META: Record<
     nameEn: 'Maghrib',
     verseAr: 'فَسُبْحَانَ اللَّهِ حِينَ تُمْسُونَ وَحِينَ تُصْبِحُونَ',
     verseRefAr: 'سورة الروم - آية 17',
-    verseEn: 'So exalted is Allah when you reach the evening and when you reach the morning. (Ar-Rum 30:17)',
+    verseEn:
+      'So exalted is Allah when you reach the evening and when you reach the morning. (Ar-Rum 30:17)',
     recommendedWindowMinutes: 12,
   },
   isha: {
@@ -301,7 +646,8 @@ const PRAYER_META: Record<
     nameEn: 'Isha',
     verseAr: 'إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا',
     verseRefAr: 'سورة النساء - آية 103',
-    verseEn: 'Indeed, prayer has been decreed upon the believers a decree of specified times. (An-Nisa 4:103)',
+    verseEn:
+      'Indeed, prayer has been decreed upon the believers a decree of specified times. (An-Nisa 4:103)',
     recommendedWindowMinutes: 30,
   },
 }
@@ -357,10 +703,10 @@ export function calculateDistanceToKaabaKm(lat: number, lng: number): number {
 export function computePrayerSchedule(
   lat: number,
   lng: number,
-  method: CalcMethodId = 'umm_al_qura',
+  method: CalcMethodId = 'morocco_habous',
   madhab: 'shafi' | 'hanafi' = 'shafi',
   now: Date = new Date(),
-  timeZone = 'Asia/Riyadh'
+  timeZone = 'Africa/Casablanca'
 ): ComputedPrayerDay {
   const coords = new Coordinates(lat, lng)
   const params = getCalculationParams(method, madhab)
@@ -381,18 +727,22 @@ export function computePrayerSchedule(
   ]
 
   // Find next prayer
-  let nextPrayerEntry = rawEntries.find((item) => item.time.getTime() > now.getTime())
+  let nextPrayerEntry = rawEntries.find(
+    (item) => item.time.getTime() > now.getTime()
+  )
   let isTomorrowFajr = false
 
   if (!nextPrayerEntry) {
-    // Next prayer is tomorrow's Fajr
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
     const tomorrowPrayers = new PrayerTimes(coords, tomorrow, params)
     nextPrayerEntry = { id: 'fajr', time: tomorrowPrayers.fajr }
     isTomorrowFajr = true
   }
 
-  const remainingMs = Math.max(0, nextPrayerEntry.time.getTime() - now.getTime())
+  const remainingMs = Math.max(
+    0,
+    nextPrayerEntry.time.getTime() - now.getTime()
+  )
   const remainingSeconds = Math.floor(remainingMs / 1000)
   const hrs = Math.floor(remainingSeconds / 3600)
   const mins = Math.floor((remainingSeconds % 3600) / 60)
@@ -429,7 +779,6 @@ export function computePrayerSchedule(
     }
   })
 
-  // Hijri date formatting with Latin numerals for clean cross-platform rendering
   let hijriDateAr = ''
   let hijriDateEn = ''
   let hijriMonthAr = ''
@@ -437,12 +786,15 @@ export function computePrayerSchedule(
   let hijriYear = 1448
 
   try {
-    hijriDateAr = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      timeZone,
-    }).format(now)
+    hijriDateAr = new Intl.DateTimeFormat(
+      'ar-SA-u-ca-islamic-umalqura-nu-latn',
+      {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone,
+      }
+    ).format(now)
     hijriDateEn = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric',
       month: 'long',
@@ -463,9 +815,9 @@ export function computePrayerSchedule(
     if (dPart) hijriDay = parseInt(dPart.value, 10) || 1
     if (yPart) hijriYear = parseInt(yPart.value, 10) || 1448
   } catch {
-    hijriDateAr = '14 رمضان 1448 هـ'
-    hijriDateEn = '14 Ramadan 1448 AH'
-    hijriMonthAr = 'رمضان'
+    hijriDateAr = '3 جمادى الأولى 1448 هـ'
+    hijriDateEn = '3 Jumada Al-Ula 1448 AH'
+    hijriMonthAr = 'جمادى الأولى'
   }
 
   const gregorianAr = new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
@@ -536,48 +888,276 @@ export interface MuezzinProfile {
   id: string
   nameAr: string
   nameEn: string
+  countryAr: string
+  countryEn: string
+  region: RegionGroup
   mosqueAr: string
   mosqueEn: string
   maqamAr: string
+  takbeerStyleAr: string
   baseFreq: number
+  audioStreamUrl: string
 }
 
 export const MUEZZIN_PROFILES: MuezzinProfile[] = [
+  // ١. الأصوات المغاربية الأصيلة (المغرب، الجزائر، تونس، ليبيا، موريتانيا)
+  {
+    id: 'morocco_rabat_habous',
+    nameAr: 'الأذان المغربي الرسمي (وزارة الأوقاف)',
+    nameEn: 'Official Moroccan Habous Adhan (Rabat)',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    mosqueAr: 'مسجد حسان ومسجد السنة - الرباط',
+    mosqueEn: 'Hassan & As-Sunnah Mosque, Rabat',
+    maqamAr: 'الطبع المغربي الأندلسي الأصيل',
+    takbeerStyleAr: 'صيغة المذهب المالكي (تثنية التكبير وترجيع الشهادتين)',
+    baseFreq: 293.66,
+    audioStreamUrl: '/api/adhan-audio?id=morocco_rabat_habous',
+  },
+  {
+    id: 'morocco_hassan_ii',
+    nameAr: 'أذان مسجد الحسن الثاني الكبير',
+    nameEn: 'Hassan II Grand Mosque Adhan',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    mosqueAr: 'مسجد الحسن الثاني - الدار البيضاء',
+    mosqueEn: 'Hassan II Mosque, Casablanca',
+    maqamAr: 'مقام الاستهلال المغربي الخاشع',
+    takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
+    baseFreq: 311.13,
+    audioStreamUrl: '/api/adhan-audio?id=morocco_hassan_ii',
+  },
+  {
+    id: 'morocco_fes_qarawiyyin',
+    nameAr: 'أذان جامع القرويين العتيق بفاس',
+    nameEn: 'Al-Qarawiyyin Mosque Adhan (Fes)',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    mosqueAr: 'جامع القرويين - فاس',
+    mosqueEn: 'Al-Qarawiyyin Mosque, Fes',
+    maqamAr: 'طبع الأصبهان والحجاز الفاسي',
+    takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
+    baseFreq: 277.18,
+    audioStreamUrl: '/api/adhan-audio?id=morocco_fes_qarawiyyin',
+  },
+  {
+    id: 'morocco_marrakech_koutoubia',
+    nameAr: 'أذان جامع الكتبية بمراكش',
+    nameEn: 'Koutoubia Mosque Adhan (Marrakech)',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    mosqueAr: 'جامع الكتبية - مراكش',
+    mosqueEn: 'Koutoubia Mosque, Marrakech',
+    maqamAr: 'الطبع المراكشي المغربي',
+    takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
+    baseFreq: 329.63,
+    audioStreamUrl: '/api/adhan-audio?id=morocco_marrakech_koutoubia',
+  },
+  {
+    id: 'algeria_algiers',
+    nameAr: 'الأذان الجزائري المغاربي الأصيل',
+    nameEn: 'Great Mosque of Algiers Adhan',
+    countryAr: 'الجزائر',
+    countryEn: 'Algeria',
+    region: 'maghreb',
+    mosqueAr: 'الجامع الأعظم - الجزائر العاصمة',
+    mosqueEn: 'Djamaa el Djazair, Algiers',
+    maqamAr: 'مقام الزيدان والحجاز الجزائري',
+    takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
+    baseFreq: 293.66,
+    audioStreamUrl: '/api/adhan-audio?id=algeria_algiers',
+  },
+  {
+    id: 'tunisia_zitouna',
+    nameAr: 'أذان جامع الزيتونة المعمور',
+    nameEn: 'Ez-Zitouna Mosque Adhan (Tunis)',
+    countryAr: 'تونس',
+    countryEn: 'Tunisia',
+    region: 'maghreb',
+    mosqueAr: 'جامع الزيتونة - تونس العاصمة',
+    mosqueEn: 'Ez-Zitouna Grand Mosque, Tunis',
+    maqamAr: 'طبع الحسين والبياتي التونسي',
+    takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
+    baseFreq: 349.23,
+    audioStreamUrl: '/api/adhan-audio?id=tunisia_zitouna',
+  },
+  {
+    id: 'libya_tripoli',
+    nameAr: 'الأذان الليبي الطرابلسي',
+    nameEn: 'Tripoli Grand Mosque Adhan (Libya)',
+    countryAr: 'ليبيا',
+    countryEn: 'Libya',
+    region: 'maghreb',
+    mosqueAr: 'جامع قرجي والناقة - طرابلس',
+    mosqueEn: 'Gurgi Mosque, Tripoli',
+    maqamAr: 'الأداء المغاربي الليبي',
+    takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
+    baseFreq: 311.13,
+    audioStreamUrl: '/api/adhan-audio?id=libya_tripoli',
+  },
+  {
+    id: 'mauritania_chinguetti',
+    nameAr: 'الأذان الشنقيطي الموريتاني',
+    nameEn: 'Chinguetti & Nouakchott Adhan (Mauritania)',
+    countryAr: 'موريتانيا',
+    countryEn: 'Mauritania',
+    region: 'maghreb',
+    mosqueAr: 'المسجد الجامع بنواكشوط وشنقيط',
+    mosqueEn: 'Grand Mosque of Nouakchott',
+    maqamAr: 'مقام التيدنيت الشنقيطي الخاشع',
+    takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
+    baseFreq: 261.63,
+    audioStreamUrl: '/api/adhan-audio?id=mauritania_chinguetti',
+  },
+
+  // ٢. أصوات الحرمين الشريفين والخليج العربي
   {
     id: 'makkah_haram',
-    nameAr: 'الشيخ علي أحمد ملا',
-    nameEn: 'Sheikh Ali Ahmed Mulla',
+    nameAr: 'الشيخ علي أحمد ملا (مكة المكرمة)',
+    nameEn: 'Sheikh Ali Ahmed Mulla (Makkah)',
+    countryAr: 'السعودية',
+    countryEn: 'Saudi Arabia',
+    region: 'haramain_gulf',
     mosqueAr: 'المسجد الحرام - مكة المكرمة',
     mosqueEn: 'Masjid Al-Haram, Makkah',
-    maqamAr: 'مقام الحجاز الأصيل',
-    baseFreq: 293.66, // D4 Hijaz
+    maqamAr: 'مقام الحجاز المكي الأصيل',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 293.66,
+    audioStreamUrl: '/api/adhan-audio?id=makkah_haram',
   },
   {
     id: 'madinah_haram',
-    nameAr: 'الشيخ عصام بخاري',
-    nameEn: 'Sheikh Essam Bukhari',
+    nameAr: 'الشيخ عصام بخاري (المدينة المنورة)',
+    nameEn: 'Sheikh Essam Bukhari (Madinah)',
+    countryAr: 'السعودية',
+    countryEn: 'Saudi Arabia',
+    region: 'haramain_gulf',
     mosqueAr: 'المسجد النبوي الشريف',
     mosqueEn: 'Al-Masjid An-Nabawi, Madinah',
     maqamAr: 'مقام البياتي المدني',
-    baseFreq: 329.63, // E4 Bayati
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 329.63,
+    audioStreamUrl: '/api/adhan-audio?id=madinah_haram',
   },
   {
     id: 'alafasy',
     nameAr: 'الشيخ مشاري راشد العفاسي',
     nameEn: 'Sheikh Mishary Rashid Alafasy',
+    countryAr: 'الكويت',
+    countryEn: 'Kuwait',
+    region: 'haramain_gulf',
     mosqueAr: 'المسجد الكبير - الكويت',
     mosqueEn: 'Grand Mosque, Kuwait',
     maqamAr: 'مقام النهاوند الخاشع',
-    baseFreq: 261.63, // C4 Nahawand
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 261.63,
+    audioStreamUrl: '/api/adhan-audio?id=alafasy',
   },
+  {
+    id: 'uae_zayed',
+    nameAr: 'أذان جامع الشيخ زايد الكبير',
+    nameEn: 'Sheikh Zayed Grand Mosque Adhan',
+    countryAr: 'الإمارات',
+    countryEn: 'UAE',
+    region: 'haramain_gulf',
+    mosqueAr: 'جامع الشيخ زايد - أبوظبي',
+    mosqueEn: 'Sheikh Zayed Mosque, Abu Dhabi',
+    maqamAr: 'مقام الصبا والبياتي الخليجي',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 293.66,
+    audioStreamUrl: '/api/adhan-audio?id=uae_zayed',
+  },
+
+  // ٣. أصوات مصر والقدس والشام
   {
     id: 'abdulbasit',
     nameAr: 'الشيخ عبد الباسط عبد الصمد',
     nameEn: 'Sheikh Abdulbasit Abdulsamad',
+    countryAr: 'مصر',
+    countryEn: 'Egypt',
+    region: 'egypt_levant',
     mosqueAr: 'مسجد الإمام الشافعي - القاهرة',
     mosqueEn: 'Imam Shafi Mosque, Cairo',
-    maqamAr: 'مقام الراست المصري',
-    baseFreq: 349.23, // F4 Rast
+    maqamAr: 'مقام الراست والبياتي المصري',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 349.23,
+    audioStreamUrl: '/api/adhan-audio?id=abdulbasit',
+  },
+  {
+    id: 'alquds_aqsa',
+    nameAr: 'أذان المسجد الأقصى المبارك',
+    nameEn: 'Al-Aqsa Mosque Adhan (Al-Quds)',
+    countryAr: 'فلسطين',
+    countryEn: 'Palestine',
+    region: 'egypt_levant',
+    mosqueAr: 'المسجد الأقصى المبارك - القدس الشريف',
+    mosqueEn: 'Al-Aqsa Mosque, Jerusalem',
+    maqamAr: 'المقام المقدسي الشامي',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 311.13,
+    audioStreamUrl: '/api/adhan-audio?id=alquds_aqsa',
+  },
+  {
+    id: 'damascus_umayyad',
+    nameAr: 'الأذان الدمشقي الجماعي (الجامع الأموي)',
+    nameEn: 'Umayyad Mosque Choral Adhan (Damascus)',
+    countryAr: 'سوريا',
+    countryEn: 'Syria',
+    region: 'egypt_levant',
+    mosqueAr: 'الجامع الأموي الكبير - دمشق',
+    mosqueEn: 'Umayyad Mosque, Damascus',
+    maqamAr: 'جوق المؤذنين بالجامع الأموي',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 277.18,
+    audioStreamUrl: '/api/adhan-audio?id=damascus_umayyad',
+  },
+
+  // ٤. أصوات تركيا وماليزيا وإندونيسيا والعالم الإسلامي
+  {
+    id: 'istanbul_ayasofya',
+    nameAr: 'أذان مسجد آيا صوفيا والسلطان أحمد',
+    nameEn: 'Hagia Sophia & Blue Mosque Adhan',
+    countryAr: 'تركيا',
+    countryEn: 'Turkey',
+    region: 'islamic_world',
+    mosqueAr: 'مسجد آيا صوفيا الكبير - إسطنبول',
+    mosqueEn: 'Hagia Sophia Grand Mosque, Istanbul',
+    maqamAr: 'مقام الصبا والحجاز العثماني',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 329.63,
+    audioStreamUrl: '/api/adhan-audio?id=istanbul_ayasofya',
+  },
+  {
+    id: 'malaysia_putra',
+    nameAr: 'أذان المسجد الوطني بماليزيا',
+    nameEn: 'Putra Mosque Adhan (Malaysia)',
+    countryAr: 'ماليزيا',
+    countryEn: 'Malaysia',
+    region: 'islamic_world',
+    mosqueAr: 'مسجد بوترا - كوالالمبور',
+    mosqueEn: 'Putra Mosque, Kuala Lumpur',
+    maqamAr: 'مقام النهاوند الآسيوي الهادئ',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 261.63,
+    audioStreamUrl: '/api/adhan-audio?id=malaysia_putra',
+  },
+  {
+    id: 'indonesia_istiqlal',
+    nameAr: 'أذان مسجد الاستقلال بجاكرتا',
+    nameEn: 'Istiqlal Grand Mosque Adhan (Indonesia)',
+    countryAr: 'إندونيسيا',
+    countryEn: 'Indonesia',
+    region: 'islamic_world',
+    mosqueAr: 'مسجد الاستقلال الكبير - جاكرتا',
+    mosqueEn: 'Istiqlal Mosque, Jakarta',
+    maqamAr: 'مقام البياتي الجاوي الخاشع',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 293.66,
+    audioStreamUrl: '/api/adhan-audio?id=indonesia_istiqlal',
   },
 ]
 
@@ -595,53 +1175,79 @@ export interface FiqhTopic {
 
 export const FIQH_TOPICS: FiqhTopic[] = [
   {
+    id: 'maliki_adhan',
+    categoryAr: 'فقه الأذان المغاربي',
+    categoryEn: 'Maghrebi & Maliki Adhan Fiqh',
+    titleAr: 'صفة الأذان في المذهب المالكي والغرب الإسلامي',
+    titleEn: 'Maliki Adhan Formula in Morocco & Maghreb',
+    summaryAr:
+      'الخصائص الفقهية للأذان المغاربي المعتمد لدى وزارة الأوقاف والشؤون الإسلامية بالمغرب وسائر بلاد المغرب العربي.',
+    summaryEn:
+      'Authentic Maliki jurisprudence of Adhan practiced across Morocco, Algeria, Tunisia, Libya, and Mauritania.',
+    detailsAr: [
+      'تثنية التكبير في أول الأذان (الله أكبر، الله أكبر — مرتين) عملاً بعمل أهل المدينة المنورة الذي نقله الإمام مالك رحمه الله',
+      'الترجيع في الشهادتين: النطق بالشهادتين سراً بصوت منخفض ثم إعادتهما جهراً بصوت مرتفع',
+      'التثويب في أذان الفجر (الصلاة خير من النوم — مرتين) بعد حي على الفلاح',
+      'الإقامة تكون مفردة في ألفاظها عند المالكية إلا قد قامت الصلاة',
+    ],
+    evidenceAr:
+      'حديث أبي محذورة رضي الله عنه في صحيح مسلم، وما استقر عليه عمل أهل المدينة في موطأ الإمام مالك',
+  },
+  {
     id: 'shuroot',
     categoryAr: 'الشروط والأركان',
     categoryEn: 'Conditions & Pillars',
     titleAr: 'شروط صحة الصلاة التسعة',
     titleEn: 'The Nine Conditions of Valid Prayer',
     summaryAr: 'الشروط التي تسبق الصلاة ويجب تحققها لصحة الأداء والقبول.',
-    summaryEn: 'Prerequisites that must be fulfilled before and during prayer.',
+    summaryEn:
+      'Prerequisites that must be fulfilled before and during prayer.',
     detailsAr: [
       'الإسلام والعقل والتمييز',
       'رفع الحدث الأصغر بالوضوء والأكبر بالاغتسال',
       'إزالة النجاسة عن البدن والثوب والمكان',
-      'ستر العورة ودخول الوقت الشرعي المحدد فلكياً',
+      'ستر العورة ودخول الوقت الشرعي المحدد فلكياً أو عبر تقويم وزارة الأوقاف',
       'استقبال القبلة والنية بالقلب دون التلفظ بها',
     ],
-    evidenceAr: 'قال تعالى: {إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا} [النساء: 103]',
+    evidenceAr:
+      'قال تعالى: {إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا} [النساء: 103]',
   },
   {
     id: 'arkan',
     categoryAr: 'الشروط والأركان',
     categoryEn: 'Conditions & Pillars',
-    titleAr: 'أركان الصلاة الأربعة عشر',
-    titleEn: 'The Fourteen Pillars of Prayer',
+    titleAr: 'فرائض وأركان الصلاة',
+    titleEn: 'The Essential Pillars of Prayer',
     summaryAr: 'الأجزاء الأساسية التي لا تسقط سهواً ولا جهلاً ولا عمداً.',
-    summaryEn: 'Essential integrals of prayer that cannot be omitted intentionally or by forgetfulness.',
+    summaryEn:
+      'Essential integrals of prayer that cannot be omitted intentionally or by forgetfulness.',
     detailsAr: [
       'القيام في الفرض مع القدرة وتكبيرة الإحرام',
-      'قراءة الفاتحة في كل ركعة والركوع والاعتدال منه',
-      'السجود على الأعضاء السبعة والجلوس بين السجدتين',
-      'الطمأنينة في جميع الأركان والتشهد الأخير والجلوس له',
-      'الصلاة على النبي ﷺ والتسليمتان والترتيب بين الأركان',
+      'قراءة الفاتحة في كل ركعة والركوع والرفع منه',
+      'السجود على الجبهة والأعضاء والجلوس بين السجدتين',
+      'الطمأنينة والاعتدال في جميع الأركان والجلوس للتشهد الأخير',
+      'السلام والترتيب بين الأركان',
     ],
-    evidenceAr: 'حديث المسيء صلاته: «إذا قمت إلى الصلاة فكبر، ثم اقرأ ما تيسر معك من القرآن...» متفق عليه',
+    evidenceAr:
+      'حديث المسيء صلاته: «إذا قمت إلى الصلاة فكبر، ثم اقرأ ما تيسر معك من القرآن...» متفق عليه',
   },
   {
     id: 'sujood_sahw',
     categoryAr: 'أحكام السهو',
     categoryEn: 'Forgetfulness Prostration',
-    titleAr: 'أحكام سجود السهو وأسبابه الثلاثة',
-    titleEn: 'Rulings of Sujood As-Sahw (Forgetfulness)',
-    summaryAr: 'كيفية جبر الخلل الواقع في الصلاة بسبب الزيادة أو النقص أو الشك.',
-    summaryEn: 'How to remedy unintended additions, omissions, or doubts during prayer.',
+    titleAr: 'أحكام سجود السهو القبلي والبعدي',
+    titleEn: 'Rulings of Sujood As-Sahw (Pre & Post Salam)',
+    summaryAr:
+      'كيفية جبر الخلل الواقع في الصلاة بسبب الزيادة أو النقص أو الشك على المذهب المالكي ومذاهب الجمهور.',
+    summaryEn:
+      'How to remedy unintended additions, omissions, or doubts during prayer.',
     detailsAr: [
-      'إذا زاد المصلي فعلاً من جنس الصلاة سهواً سجد للسهو بعد السلام',
-      'إذا ترك واجباً كالتشهد الأول ناسياً سجد للسهو قبل السلام',
-      'إذا شك في عدد الركعات بنى على اليقين (الأقل) وسجد قبل السلام، وإن ترجح عنده غلبة ظن عمل بها وسجد بعد السلام',
+      'السجود القبلي (قبل السلام): يشرع عند نقص سنة مؤكدة كترك السورة بعد الفاتحة أو التشهد الأوسط، أو عند اجتماع نقص وزيادة تغليباً لجانب النقص',
+      'السجود البعدي (بعد السلام): يشرع عند محض الزيادة السهوية من جنس الصلاة كزيادة ركعة أو سجدة سهواً',
+      'إذا شك المصلي في عدد الركعات بنى على اليقين (الأقل) وأتى بما بقي وسجد للسهو',
     ],
-    evidenceAr: 'قال النبي ﷺ: «إذا شك أحدكم في صلاته فليطرح الشك وليبن على ما استيقن» رواه مسلم',
+    evidenceAr:
+      'قال النبي ﷺ: «إذا شك أحدكم في صلاته فليطرح الشك وليبن على ما استيقن» رواه مسلم',
   },
   {
     id: 'musafir',
@@ -649,29 +1255,16 @@ export const FIQH_TOPICS: FiqhTopic[] = [
     categoryEn: 'Travel & Concessions',
     titleAr: 'قصر الصلاة وجمعها للمسافر',
     titleEn: 'Shortening & Combining Prayers for Travelers',
-    summaryAr: 'تيسير الشريعة الإسلامية في قصر الرباعية إلى ركعتين والجمع بين الصلاتين.',
-    summaryEn: 'Islamic ease allowing 4-unit prayers to be shortened to 2 units during travel.',
+    summaryAr:
+      'تيسير الشريعة الإسلامية في قصر الرباعية إلى ركعتين والجمع بين الصلاتين.',
+    summaryEn:
+      'Islamic ease allowing 4-unit prayers to be shortened to 2 units during travel.',
     detailsAr: [
       'تقصر الصلاة الرباعية (الظهر، العصر، العشاء) إلى ركعتين عند مفارقة عمران البلد',
       'يجوز الجمع بين الظهر والعصر، وبين المغرب والعشاء جمع تقديم أو جمع تأخير حسب الأرفق بالمسافر',
       'الفجر والمغرب لا يدخلهما القصر ويبقيان على عدد ركعاتهما',
     ],
-    evidenceAr: 'قال تعالى: {وَإِذَا ضَرَبْتُمْ فِي الْأَرْضِ فَلَيْسَ عَلَيْكُمْ جُنَاحٌ أَن تَقْصُرُوا مِنَ الصَّلَاةِ} [النساء: 101]',
-  },
-  {
-    id: 'khushu',
-    categoryAr: 'فقه القلوب',
-    categoryEn: 'Spiritual Focus',
-    titleAr: 'وسائل تحقيق الخشوع في الصلاة',
-    titleEn: 'Keys to Deep Khushu & Presence in Prayer',
-    summaryAr: 'خطوات عملية لاستحضار عظمة الله والتخلص من شرود الذهن أثناء الصلاة.',
-    summaryEn: 'Practical spiritual steps to cultivate mindfulness and tranquility in Salah.',
-    detailsAr: [
-      'الاستعداد المبكر منذ سماع التنبيه قبل الأذان بـ 15 دقيقة وتفريغ القلب من الشواغل',
-      'إسباغ الوضوء مع استحضار تساقط الذنوب مع قطرات الماء',
-      'تدبر معاني الفاتحة وتنويع سور القراءة والأذكار الواردة في الركوع والسجود',
-      'النظر إلى موضع السجود وتجنب الالتفات أو الانشغال بالهاتف قبل التكبير',
-    ],
-    evidenceAr: 'قال تعالى: {قَدْ أَفْلَحَ الْمُؤْمِنُونَ * الَّذِينَ هُمْ فِي صَلَاتِهِمْ خَاشِعُونَ} [المؤمنون: 1-2]',
+    evidenceAr:
+      'قال تعالى: {وَإِذَا ضَرَبْتُمْ فِي الْأَرْضِ فَلَيْسَ عَلَيْكُمْ جُنَاحٌ أَن تَقْصُرُوا مِنَ الصَّلَاةِ} [النساء: 101]',
   },
 ]

@@ -16,7 +16,11 @@ import {
   MUEZZIN_PROFILES,
   type ComputedPrayerDay,
 } from '@/lib/prayer-engine'
-import { playHarmonicAdhanPreview, stopAdhanAudio } from '@/lib/audio-adhan'
+import {
+  playAdhanByMuezzinId,
+  stopAdhanAudio,
+  subscribeAdhanState,
+} from '@/lib/audio-adhan'
 
 interface QiblaCalendarFiqhProps {
   schedule: ComputedPrayerDay
@@ -38,6 +42,12 @@ export function QiblaCalendarFiqh({
   const [selectedFiqhId, setSelectedFiqhId] = useState<string>(FIQH_TOPICS[0].id)
   const [copiedShare, setCopiedShare] = useState(false)
   const [playingMuezzinId, setPlayingMuezzinId] = useState<string | null>(null)
+
+  React.useEffect(() => {
+    return subscribeAdhanState((st) => {
+      setPlayingMuezzinId(st.isPlaying ? st.muezzinId : null)
+    })
+  }, [])
 
   const relativeRotation = (schedule.qiblaAngle - deviceHeading + 360) % 360
   const isAlignedWithKaaba =
@@ -66,14 +76,12 @@ export function QiblaCalendarFiqh({
     }
   }
 
-  const handlePreviewMuezzin = (id: string, freq: number) => {
+  const handlePreviewMuezzin = (id: string) => {
     if (playingMuezzinId === id) {
       stopAdhanAudio()
-      setPlayingMuezzinId(null)
     } else {
-      setPlayingMuezzinId(id)
       onSelectMuezzin(id)
-      playHarmonicAdhanPreview(freq, () => setPlayingMuezzinId(null))
+      playAdhanByMuezzinId(id)
     }
   }
 
@@ -218,7 +226,7 @@ export function QiblaCalendarFiqh({
                 </div>
                 <button
                   type="button"
-                  onClick={() => handlePreviewMuezzin(m.id, m.baseFreq)}
+                  onClick={() => handlePreviewMuezzin(m.id)}
                   className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
                     isPlaying
                       ? 'bg-amber-500 text-emerald-950'
