@@ -54,7 +54,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable} ${amiri.variable} dark`} suppressHydrationWarning>
-      <body className="antialiased selection:bg-emerald-500/20 selection:text-emerald-400">
+      <body
+        className="antialiased selection:bg-emerald-500/20 selection:text-emerald-400"
+        suppressHydrationWarning
+      >
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

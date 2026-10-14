@@ -110,7 +110,7 @@ export function SettingsPanel({
   onToggleNotification,
 }: SettingsPanelProps) {
   const isAr = lang === 'ar'
-  const [regionFilter, setRegionFilter] = useState<'all' | RegionGroup>('all')
+  const [regionFilter, setRegionFilter] = useState<'offline5' | 'all' | RegionGroup>('offline5')
   const [habousCity, setHabousCity] = useState<string>(() => {
     const preset = CITY_PRESETS.find((c) => c.id === cityId)
     return preset?.habousCityKey || 'rabat'
@@ -120,9 +120,11 @@ export function SettingsPanel({
     muezzinId: null,
     currentTime: 0,
     duration: 0,
-    volume: 0.9,
+    volume: 0.95,
     mode: 'idle',
     currentPhraseAr: '',
+    offlineCachedCount: 5,
+    isOfflineReady: true,
   })
 
   useEffect(() => {
@@ -139,9 +141,11 @@ export function SettingsPanel({
   )
 
   const filteredMuezzins =
-    regionFilter === 'all'
-      ? MUEZZIN_PROFILES
-      : MUEZZIN_PROFILES.filter((m) => m.region === regionFilter)
+    regionFilter === 'offline5'
+      ? MUEZZIN_PROFILES.filter((m) => m.isCoreOffline)
+      : regionFilter === 'all'
+        ? MUEZZIN_PROFILES
+        : MUEZZIN_PROFILES.filter((m) => m.region === regionFilter)
 
   const activeMuezzin =
     MUEZZIN_PROFILES.find((m) => m.id === muezzinId) || MUEZZIN_PROFILES[0]
@@ -166,7 +170,18 @@ export function SettingsPanel({
     onChangeMethod('morocco_habous')
   }
 
-  const regionTabs: { id: 'all' | RegionGroup; labelAr: string; labelEn: string; count: number }[] = [
+  const regionTabs: {
+    id: 'offline5' | 'all' | RegionGroup
+    labelAr: string
+    labelEn: string
+    count: number
+  }[] = [
+    {
+      id: 'offline5',
+      labelAr: '5 أذانات بدون إنترنت (مخزنة بالجهاز)',
+      labelEn: '5 Offline Adhans (Built-in)',
+      count: 5,
+    },
     {
       id: 'all',
       labelAr: 'جميع الدول (18)',
@@ -215,26 +230,23 @@ export function SettingsPanel({
               <Radio className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <h2 className="text-sm font-bold text-foreground">
                   {isAr
-                    ? 'مشغل الأذان الصوتي المباشر (MP3 عالي النقاء)'
-                    : 'Live Adhan Audio Player (HD MP3)'}
+                    ? 'مشغل الأذان الحقيقي بدون إنترنت (5 أذانات MP3 مدمجة بالجهاز)'
+                    : 'Offline Real Human Adhan Player (5 Built-in MP3s)'}
                 </h2>
-                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
-                  {audioState.isPlaying
-                    ? isAr
-                      ? 'يرفع الأذان الآن'
-                      : 'Playing Now'
-                    : isAr
-                      ? 'جاهز للتشغيل'
-                      : 'Ready'}
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                  <ShieldCheck className="h-3 w-3 text-amber-400" />
+                  {isAr
+                    ? `يعمل بدون إنترنت (${audioState.offlineCachedCount}/5 محفوظة)`
+                    : `Works Offline (${audioState.offlineCachedCount}/5 Cached)`}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground">
                 {isAr
-                  ? `المؤذن المعتمد حالياً: ${activeMuezzin.nameAr} — ${activeMuezzin.countryAr}`
-                  : `Selected Muezzin: ${activeMuezzin.nameEn} (${activeMuezzin.countryEn})`}
+                  ? `المؤذن المعتمد حالياً: ${activeMuezzin.nameAr} — صوت بشري حقيقي ١٠٠٪ بدون أي قارئ آلي`
+                  : `Selected Muezzin: ${activeMuezzin.nameEn} — 100% Authentic Human Recording`}
               </p>
             </div>
           </div>
@@ -402,15 +414,23 @@ export function SettingsPanel({
                 <div className="space-y-1">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span
-                        className={`inline-block rounded-md px-1.5 py-0.5 text-[9px] font-bold mb-1 ${
-                          isMaghreb
-                            ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/30'
-                            : 'bg-emerald-500/15 text-emerald-300'
-                        }`}
-                      >
-                        {isAr ? m.countryAr : m.countryEn}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1 mb-1">
+                        <span
+                          className={`inline-block rounded-md px-1.5 py-0.5 text-[9px] font-bold ${
+                            isMaghreb
+                              ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-400/30'
+                              : 'bg-emerald-500/15 text-emerald-300'
+                          }`}
+                        >
+                          {isAr ? m.countryAr : m.countryEn}
+                        </span>
+                        <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold text-emerald-200 ring-1 ring-emerald-500/30">
+                          <ShieldCheck className="h-2.5 w-2.5 text-amber-300" />
+                          {isAr
+                            ? `بدون إنترنت • أذان #${m.offlineSlot || 1}`
+                            : `Offline • Adhan #${m.offlineSlot || 1}`}
+                        </span>
+                      </div>
                       <h4 className="text-xs font-bold text-foreground">
                         {isAr ? m.nameAr : m.nameEn}
                       </h4>

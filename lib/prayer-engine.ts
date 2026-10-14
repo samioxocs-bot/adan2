@@ -652,36 +652,55 @@ const PRAYER_META: Record<
   },
 }
 
-export function formatTime12Ar(date: Date, timeZone = 'Asia/Riyadh'): string {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone,
-  }).formatToParts(date)
-  const hour = parts.find((p) => p.type === 'hour')?.value || '12'
-  const minute = parts.find((p) => p.type === 'minute')?.value || '00'
-  const dayPeriod = parts.find((p) => p.type === 'dayPeriod')?.value || 'AM'
-  const suffix = dayPeriod.toUpperCase().includes('P') ? 'م' : 'ص'
-  return `${hour}:${minute} ${suffix}`
+const TIMEZONE_UTC_OFFSET_MINUTES: Record<string, number> = {
+  'Africa/Casablanca': 60,
+  'Africa/Algiers': 60,
+  'Africa/Tunis': 60,
+  'Africa/Tripoli': 120,
+  'Africa/Nouakchott': 0,
+  'Asia/Riyadh': 180,
+  'Asia/Dubai': 240,
+  'Asia/Qatar': 180,
+  'Asia/Kuwait': 180,
+  'Africa/Cairo': 180,
+  'Asia/Jerusalem': 180,
+  'Asia/Damascus': 180,
+  'Asia/Baghdad': 180,
+  'Europe/Istanbul': 180,
+  'Asia/Kuala_Lumpur': 480,
+  'Asia/Jakarta': 420,
+  'Europe/London': 60,
+  UTC: 0,
 }
 
-export function formatTime12En(date: Date, timeZone = 'Asia/Riyadh'): string {
-  return new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone,
-  }).format(date)
+function getShiftedUtcDate(date: Date, timeZone = 'Africa/Casablanca'): Date {
+  const offsetMinutes = TIMEZONE_UTC_OFFSET_MINUTES[timeZone] ?? 60
+  return new Date(date.getTime() + offsetMinutes * 60_000)
 }
 
-export function formatTime24(date: Date, timeZone = 'Asia/Riyadh'): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone,
-  }).format(date)
+export function formatTime12Ar(date: Date, timeZone = 'Africa/Casablanca'): string {
+  const shifted = getShiftedUtcDate(date, timeZone)
+  const h24 = shifted.getUTCHours()
+  const m = shifted.getUTCMinutes()
+  const h12 = h24 % 12 || 12
+  const suffix = h24 >= 12 ? 'م' : 'ص'
+  return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
+export function formatTime12En(date: Date, timeZone = 'Africa/Casablanca'): string {
+  const shifted = getShiftedUtcDate(date, timeZone)
+  const h24 = shifted.getUTCHours()
+  const m = shifted.getUTCMinutes()
+  const h12 = h24 % 12 || 12
+  const suffix = h24 >= 12 ? 'PM' : 'AM'
+  return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
+export function formatTime24(date: Date, timeZone = 'Africa/Casablanca'): string {
+  const shifted = getShiftedUtcDate(date, timeZone)
+  const h24 = shifted.getUTCHours()
+  const m = shifted.getUTCMinutes()
+  return `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
 export function calculateDistanceToKaabaKm(lat: number, lng: number): number {
@@ -710,7 +729,16 @@ export function computePrayerSchedule(
 ): ComputedPrayerDay {
   const coords = new Coordinates(lat, lng)
   const params = getCalculationParams(method, madhab)
-  const prayerTimes = new PrayerTimes(coords, now, params)
+  const shiftedNow = getShiftedUtcDate(now, timeZone)
+  const solarDate = new Date(
+    shiftedNow.getUTCFullYear(),
+    shiftedNow.getUTCMonth(),
+    shiftedNow.getUTCDate(),
+    12,
+    0,
+    0
+  )
+  const prayerTimes = new PrayerTimes(coords, solarDate, params)
   const sunnahTimes = new SunnahTimes(prayerTimes)
   const qiblaAngle = Math.round(Qibla(coords) * 10) / 10
 
@@ -733,8 +761,15 @@ export function computePrayerSchedule(
   let isTomorrowFajr = false
 
   if (!nextPrayerEntry) {
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
-    const tomorrowPrayers = new PrayerTimes(coords, tomorrow, params)
+    const tomorrowSolar = new Date(
+      shiftedNow.getUTCFullYear(),
+      shiftedNow.getUTCMonth(),
+      shiftedNow.getUTCDate() + 1,
+      12,
+      0,
+      0
+    )
+    const tomorrowPrayers = new PrayerTimes(coords, tomorrowSolar, params)
     nextPrayerEntry = { id: 'fajr', time: tomorrowPrayers.fajr }
     isTomorrowFajr = true
   }
@@ -792,24 +827,24 @@ export function computePrayerSchedule(
         day: 'numeric',
         month: 'long',
         year: 'numeric',
-        timeZone,
+        timeZone: 'UTC',
       }
-    ).format(now)
+    ).format(shiftedNow)
     hijriDateEn = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
-      timeZone,
-    }).format(now)
+      timeZone: 'UTC',
+    }).format(shiftedNow)
     hijriMonthAr = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
       month: 'long',
-      timeZone,
-    }).format(now)
+      timeZone: 'UTC',
+    }).format(shiftedNow)
     const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
       day: 'numeric',
       year: 'numeric',
-      timeZone,
-    }).formatToParts(now)
+      timeZone: 'UTC',
+    }).formatToParts(shiftedNow)
     const dPart = parts.find((p) => p.type === 'day')
     const yPart = parts.find((p) => p.type === 'year')
     if (dPart) hijriDay = parseInt(dPart.value, 10) || 1
@@ -825,21 +860,21 @@ export function computePrayerSchedule(
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    timeZone,
-  }).format(now)
+    timeZone: 'UTC',
+  }).format(shiftedNow)
 
   const gregorianEn = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    timeZone,
-  }).format(now)
+    timeZone: 'UTC',
+  }).format(shiftedNow)
 
   const nextMeta = PRAYER_META[nextPrayerEntry.id]
 
   return {
-    dateIso: now.toISOString().split('T')[0],
+    dateIso: shiftedNow.toISOString().split('T')[0],
     hijriDateAr,
     hijriDateEn,
     hijriMonthAr,
@@ -897,24 +932,94 @@ export interface MuezzinProfile {
   takbeerStyleAr: string
   baseFreq: number
   audioStreamUrl: string
+  offlineSlot?: 1 | 2 | 3 | 4 | 5
+  isCoreOffline?: boolean
 }
 
 export const MUEZZIN_PROFILES: MuezzinProfile[] = [
-  // ١. الأصوات المغاربية الأصيلة (المغرب، الجزائر، تونس، ليبيا، موريتانيا)
+  // === الأصوات الـ 5 الأساسية المخزنة محلياً (تعمل 100% بدون إنترنت) ===
   {
     id: 'morocco_rabat_habous',
-    nameAr: 'الأذان المغربي الرسمي (وزارة الأوقاف)',
-    nameEn: 'Official Moroccan Habous Adhan (Rabat)',
+    nameAr: 'الأذان الأول (بدون إنترنت): الأذان المغربي الرسمي — الرباط',
+    nameEn: 'Offline Adhan 1: Official Moroccan Habous (Rabat)',
     countryAr: 'المغرب',
     countryEn: 'Morocco',
     region: 'maghreb',
-    mosqueAr: 'مسجد حسان ومسجد السنة - الرباط',
-    mosqueEn: 'Hassan & As-Sunnah Mosque, Rabat',
+    mosqueAr: 'مسجد حسان ومسجد السنة - الرباط (مخزن بالجهاز)',
+    mosqueEn: 'Hassan & As-Sunnah Mosque, Rabat (Offline Ready)',
     maqamAr: 'الطبع المغربي الأندلسي الأصيل',
     takbeerStyleAr: 'صيغة المذهب المالكي (تثنية التكبير وترجيع الشهادتين)',
     baseFreq: 293.66,
-    audioStreamUrl: '/api/adhan-audio?id=morocco_rabat_habous',
+    audioStreamUrl: '/audio/adhan-1.mp3',
+    offlineSlot: 1,
+    isCoreOffline: true,
   },
+  {
+    id: 'morocco_fes_qarawiyyin',
+    nameAr: 'الأذان الثاني (بدون إنترنت): أذان جامع القرويين والكتبية — فاس ومراكش',
+    nameEn: 'Offline Adhan 2: Al-Qarawiyyin & Koutoubia (Morocco)',
+    countryAr: 'المغرب',
+    countryEn: 'Morocco',
+    region: 'maghreb',
+    mosqueAr: 'جامع القرويين بفاس وجامع الكتبية بمراكش (مخزن بالجهاز)',
+    mosqueEn: 'Al-Qarawiyyin & Koutoubia Mosques (Offline Ready)',
+    maqamAr: 'طبع الأصبهان والحجاز المغاربي',
+    takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
+    baseFreq: 277.18,
+    audioStreamUrl: '/audio/adhan-2.mp3',
+    offlineSlot: 2,
+    isCoreOffline: true,
+  },
+  {
+    id: 'makkah_haram',
+    nameAr: 'الأذان الثالث (بدون إنترنت): أذان المسجد الحرام — مكة المكرمة',
+    nameEn: 'Offline Adhan 3: Masjid Al-Haram (Makkah)',
+    countryAr: 'السعودية',
+    countryEn: 'Saudi Arabia',
+    region: 'haramain_gulf',
+    mosqueAr: 'المسجد الحرام بمكة المكرمة (مخزن بالجهاز)',
+    mosqueEn: 'Masjid Al-Haram, Makkah (Offline Ready)',
+    maqamAr: 'مقام الحجاز المكي الأصيل',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 293.66,
+    audioStreamUrl: '/audio/adhan-3.mp3',
+    offlineSlot: 3,
+    isCoreOffline: true,
+  },
+  {
+    id: 'madinah_haram',
+    nameAr: 'الأذان الرابع (بدون إنترنت): أذان المسجد النبوي الشريف — المدينة المنورة',
+    nameEn: 'Offline Adhan 4: Al-Masjid An-Nabawi (Madinah)',
+    countryAr: 'السعودية',
+    countryEn: 'Saudi Arabia',
+    region: 'haramain_gulf',
+    mosqueAr: 'المسجد النبوي الشريف بالمدينة (مخزن بالجهاز)',
+    mosqueEn: 'Al-Masjid An-Nabawi, Madinah (Offline Ready)',
+    maqamAr: 'مقام البياتي المدني الخاشع',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 329.63,
+    audioStreamUrl: '/audio/adhan-4.mp3',
+    offlineSlot: 4,
+    isCoreOffline: true,
+  },
+  {
+    id: 'alquds_aqsa',
+    nameAr: 'الأذان الخامس (بدون إنترنت): أذان المسجد الأقصى والجامع الأزهر',
+    nameEn: 'Offline Adhan 5: Al-Aqsa & Al-Azhar Mosque Adhan',
+    countryAr: 'فلسطين / مصر',
+    countryEn: 'Palestine / Egypt',
+    region: 'egypt_levant',
+    mosqueAr: 'المسجد الأقصى المبارك والجامع الأزهر (مخزن بالجهاز)',
+    mosqueEn: 'Al-Aqsa & Al-Azhar Mosques (Offline Ready)',
+    maqamAr: 'المقام المقدسي والراست المصري',
+    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
+    baseFreq: 311.13,
+    audioStreamUrl: '/audio/adhan-5.mp3',
+    offlineSlot: 5,
+    isCoreOffline: true,
+  },
+
+  // === باقي أصوات الدول المغاربية والإسلامية (مرتبطة بالملفات الصوتية المحلية وتعمل بدون إنترنت) ===
   {
     id: 'morocco_hassan_ii',
     nameAr: 'أذان مسجد الحسن الثاني الكبير',
@@ -927,21 +1032,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'مقام الاستهلال المغربي الخاشع',
     takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
     baseFreq: 311.13,
-    audioStreamUrl: '/api/adhan-audio?id=morocco_hassan_ii',
-  },
-  {
-    id: 'morocco_fes_qarawiyyin',
-    nameAr: 'أذان جامع القرويين العتيق بفاس',
-    nameEn: 'Al-Qarawiyyin Mosque Adhan (Fes)',
-    countryAr: 'المغرب',
-    countryEn: 'Morocco',
-    region: 'maghreb',
-    mosqueAr: 'جامع القرويين - فاس',
-    mosqueEn: 'Al-Qarawiyyin Mosque, Fes',
-    maqamAr: 'طبع الأصبهان والحجاز الفاسي',
-    takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
-    baseFreq: 277.18,
-    audioStreamUrl: '/api/adhan-audio?id=morocco_fes_qarawiyyin',
+    audioStreamUrl: '/audio/adhan-1.mp3',
+    offlineSlot: 1,
   },
   {
     id: 'morocco_marrakech_koutoubia',
@@ -955,7 +1047,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'الطبع المراكشي المغربي',
     takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
     baseFreq: 329.63,
-    audioStreamUrl: '/api/adhan-audio?id=morocco_marrakech_koutoubia',
+    audioStreamUrl: '/audio/adhan-2.mp3',
+    offlineSlot: 2,
   },
   {
     id: 'algeria_algiers',
@@ -969,7 +1062,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'مقام الزيدان والحجاز الجزائري',
     takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
     baseFreq: 293.66,
-    audioStreamUrl: '/api/adhan-audio?id=algeria_algiers',
+    audioStreamUrl: '/audio/adhan-2.mp3',
+    offlineSlot: 2,
   },
   {
     id: 'tunisia_zitouna',
@@ -983,7 +1077,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'طبع الحسين والبياتي التونسي',
     takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
     baseFreq: 349.23,
-    audioStreamUrl: '/api/adhan-audio?id=tunisia_zitouna',
+    audioStreamUrl: '/audio/adhan-1.mp3',
+    offlineSlot: 1,
   },
   {
     id: 'libya_tripoli',
@@ -997,7 +1092,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'الأداء المغاربي الليبي',
     takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
     baseFreq: 311.13,
-    audioStreamUrl: '/api/adhan-audio?id=libya_tripoli',
+    audioStreamUrl: '/audio/adhan-2.mp3',
+    offlineSlot: 2,
   },
   {
     id: 'mauritania_chinguetti',
@@ -1011,37 +1107,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'مقام التيدنيت الشنقيطي الخاشع',
     takbeerStyleAr: 'صيغة المذهب المالكي المغاربي',
     baseFreq: 261.63,
-    audioStreamUrl: '/api/adhan-audio?id=mauritania_chinguetti',
-  },
-
-  // ٢. أصوات الحرمين الشريفين والخليج العربي
-  {
-    id: 'makkah_haram',
-    nameAr: 'الشيخ علي أحمد ملا (مكة المكرمة)',
-    nameEn: 'Sheikh Ali Ahmed Mulla (Makkah)',
-    countryAr: 'السعودية',
-    countryEn: 'Saudi Arabia',
-    region: 'haramain_gulf',
-    mosqueAr: 'المسجد الحرام - مكة المكرمة',
-    mosqueEn: 'Masjid Al-Haram, Makkah',
-    maqamAr: 'مقام الحجاز المكي الأصيل',
-    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
-    baseFreq: 293.66,
-    audioStreamUrl: '/api/adhan-audio?id=makkah_haram',
-  },
-  {
-    id: 'madinah_haram',
-    nameAr: 'الشيخ عصام بخاري (المدينة المنورة)',
-    nameEn: 'Sheikh Essam Bukhari (Madinah)',
-    countryAr: 'السعودية',
-    countryEn: 'Saudi Arabia',
-    region: 'haramain_gulf',
-    mosqueAr: 'المسجد النبوي الشريف',
-    mosqueEn: 'Al-Masjid An-Nabawi, Madinah',
-    maqamAr: 'مقام البياتي المدني',
-    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
-    baseFreq: 329.63,
-    audioStreamUrl: '/api/adhan-audio?id=madinah_haram',
+    audioStreamUrl: '/audio/adhan-1.mp3',
+    offlineSlot: 1,
   },
   {
     id: 'alafasy',
@@ -1055,7 +1122,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'مقام النهاوند الخاشع',
     takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
     baseFreq: 261.63,
-    audioStreamUrl: '/api/adhan-audio?id=alafasy',
+    audioStreamUrl: '/audio/adhan-3.mp3',
+    offlineSlot: 3,
   },
   {
     id: 'uae_zayed',
@@ -1069,10 +1137,9 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'مقام الصبا والبياتي الخليجي',
     takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
     baseFreq: 293.66,
-    audioStreamUrl: '/api/adhan-audio?id=uae_zayed',
+    audioStreamUrl: '/audio/adhan-4.mp3',
+    offlineSlot: 4,
   },
-
-  // ٣. أصوات مصر والقدس والشام
   {
     id: 'abdulbasit',
     nameAr: 'الشيخ عبد الباسط عبد الصمد',
@@ -1085,21 +1152,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'مقام الراست والبياتي المصري',
     takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
     baseFreq: 349.23,
-    audioStreamUrl: '/api/adhan-audio?id=abdulbasit',
-  },
-  {
-    id: 'alquds_aqsa',
-    nameAr: 'أذان المسجد الأقصى المبارك',
-    nameEn: 'Al-Aqsa Mosque Adhan (Al-Quds)',
-    countryAr: 'فلسطين',
-    countryEn: 'Palestine',
-    region: 'egypt_levant',
-    mosqueAr: 'المسجد الأقصى المبارك - القدس الشريف',
-    mosqueEn: 'Al-Aqsa Mosque, Jerusalem',
-    maqamAr: 'المقام المقدسي الشامي',
-    takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
-    baseFreq: 311.13,
-    audioStreamUrl: '/api/adhan-audio?id=alquds_aqsa',
+    audioStreamUrl: '/audio/adhan-5.mp3',
+    offlineSlot: 5,
   },
   {
     id: 'damascus_umayyad',
@@ -1113,10 +1167,9 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'جوق المؤذنين بالجامع الأموي',
     takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
     baseFreq: 277.18,
-    audioStreamUrl: '/api/adhan-audio?id=damascus_umayyad',
+    audioStreamUrl: '/audio/adhan-4.mp3',
+    offlineSlot: 4,
   },
-
-  // ٤. أصوات تركيا وماليزيا وإندونيسيا والعالم الإسلامي
   {
     id: 'istanbul_ayasofya',
     nameAr: 'أذان مسجد آيا صوفيا والسلطان أحمد',
@@ -1129,7 +1182,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'مقام الصبا والحجاز العثماني',
     takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
     baseFreq: 329.63,
-    audioStreamUrl: '/api/adhan-audio?id=istanbul_ayasofya',
+    audioStreamUrl: '/audio/adhan-3.mp3',
+    offlineSlot: 3,
   },
   {
     id: 'malaysia_putra',
@@ -1143,7 +1197,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'مقام النهاوند الآسيوي الهادئ',
     takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
     baseFreq: 261.63,
-    audioStreamUrl: '/api/adhan-audio?id=malaysia_putra',
+    audioStreamUrl: '/audio/adhan-4.mp3',
+    offlineSlot: 4,
   },
   {
     id: 'indonesia_istiqlal',
@@ -1157,7 +1212,8 @@ export const MUEZZIN_PROFILES: MuezzinProfile[] = [
     maqamAr: 'مقام البياتي الجاوي الخاشع',
     takbeerStyleAr: 'صيغة الجمهور (تربيع التكبير)',
     baseFreq: 293.66,
-    audioStreamUrl: '/api/adhan-audio?id=indonesia_istiqlal',
+    audioStreamUrl: '/audio/adhan-5.mp3',
+    offlineSlot: 5,
   },
 ]
 
@@ -1238,7 +1294,7 @@ export const FIQH_TOPICS: FiqhTopic[] = [
     titleAr: 'أحكام سجود السهو القبلي والبعدي',
     titleEn: 'Rulings of Sujood As-Sahw (Pre & Post Salam)',
     summaryAr:
-      'كيفية جبر الخلل الواقع في الصلاة بسبب الزيادة أو النقص أو الشك على المذهب المالكي ومذاهب الجمهور.',
+      'كيفية جبر الخلل ال��اقع في الصلاة بسبب الزيادة أو النقص أو الشك على المذهب المالكي ومذاهب الجمهور.',
     summaryEn:
       'How to remedy unintended additions, omissions, or doubts during prayer.',
     detailsAr: [
