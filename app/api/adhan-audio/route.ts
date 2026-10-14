@@ -1,61 +1,50 @@
 import { NextResponse } from 'next/server'
+import fs from 'fs'
+import path from 'path'
 
-// Verified working MP3 streams mapped by muezzin ID
-const ADHAN_STREAM_URLS: Record<string, string> = {
-  morocco_hassan_ii: 'https://www.islamcan.com/audio/adhan/azan1.mp3',
-  morocco_rabat_habous: 'https://www.islamcan.com/audio/adhan/azan2.mp3',
-  morocco_fes_qarawiyyin: 'https://www.islamcan.com/audio/adhan/azan3.mp3',
-  morocco_marrakech_koutoubia: 'https://www.islamcan.com/audio/adhan/azan4.mp3',
-  algeria_algiers: 'https://www.islamcan.com/audio/adhan/azan5.mp3',
-  tunisia_zitouna: 'https://www.islamcan.com/audio/adhan/azan6.mp3',
-  libya_tripoli: 'https://www.islamcan.com/audio/adhan/azan7.mp3',
-  mauritania_chinguetti: 'https://www.islamcan.com/audio/adhan/azan8.mp3',
-  makkah_haram: 'https://www.islamcan.com/audio/adhan/azan9.mp3',
-  madinah_haram: 'https://www.islamcan.com/audio/adhan/azan10.mp3',
-  alafasy: 'https://www.islamcan.com/audio/adhan/azan11.mp3',
-  uae_zayed: 'https://www.islamcan.com/audio/adhan/azan12.mp3',
-  abdulbasit: 'https://www.islamcan.com/audio/adhan/azan13.mp3',
-  alquds_aqsa: 'https://www.islamcan.com/audio/adhan/azan14.mp3',
-  damascus_umayyad: 'https://www.islamcan.com/audio/adhan/azan15.mp3',
-  istanbul_ayasofya: 'https://www.islamcan.com/audio/adhan/azan16.mp3',
-  malaysia_putra: 'https://www.islamcan.com/audio/adhan/azan17.mp3',
-  indonesia_istiqlal: 'https://www.islamcan.com/audio/adhan/azan18.mp3',
+// All Muezzin IDs mapped to verified local offline MP3 files in /public/audio/
+const LOCAL_ADHAN_FILES: Record<string, string> = {
+  morocco_rabat_habous: 'adhan-1.mp3',
+  morocco_hassan_ii: 'adhan-1.mp3',
+  morocco_fes_qarawiyyin: 'adhan-2.mp3',
+  morocco_marrakech_koutoubia: 'adhan-2.mp3',
+  algeria_algiers: 'adhan-2.mp3',
+  tunisia_zitouna: 'adhan-1.mp3',
+  libya_tripoli: 'adhan-2.mp3',
+  mauritania_chinguetti: 'adhan-1.mp3',
+  makkah_haram: 'adhan-3.mp3',
+  madinah_haram: 'adhan-4.mp3',
+  alafasy: 'adhan-3.mp3',
+  uae_zayed: 'adhan-4.mp3',
+  abdulbasit: 'adhan-5.mp3',
+  alquds_aqsa: 'adhan-5.mp3',
+  damascus_umayyad: 'adhan-4.mp3',
+  istanbul_ayasofya: 'adhan-3.mp3',
+  malaysia_putra: 'adhan-4.mp3',
+  indonesia_istiqlal: 'adhan-5.mp3',
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const id = searchParams.get('id') || 'morocco_rabat_habous'
-  const targetUrl =
-    ADHAN_STREAM_URLS[id] || 'https://www.islamcan.com/audio/adhan/azan2.mp3'
+  const fileName = LOCAL_ADHAN_FILES[id] || 'adhan-1.mp3'
 
   try {
-    const upstream = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Adan2AI/2.0)',
-      },
-    })
+    const filePath = path.join(process.cwd(), 'public', 'audio', fileName)
+    const fileBuffer = fs.readFileSync(filePath)
 
-    if (!upstream.ok || !upstream.body) {
-      return NextResponse.json(
-        { error: 'Upstream audio unavailable', status: upstream.status },
-        { status: 502 }
-      )
-    }
-
-    const arrayBuffer = await upstream.arrayBuffer()
-
-    return new NextResponse(arrayBuffer, {
+    return new NextResponse(fileBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'audio/mpeg',
-        'Content-Length': String(arrayBuffer.byteLength),
+        'Content-Length': String(fileBuffer.byteLength),
         'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+        'Cache-Control': 'public, max-age=31536000, immutable',
       },
     })
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to stream Adhan audio', details: String(error) },
+      { error: 'Failed to read local Adhan audio', details: String(error) },
       { status: 500 }
     )
   }
